@@ -131,4 +131,3 @@ One thing that Serial Backup doesn't handle is setting the speed
 of the serial port. It just uses the port at whatever speed it 
 was previously set to. With no consistent way to set the serial 
 port speed, it's left to an external program to do this.
-
