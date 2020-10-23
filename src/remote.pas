@@ -232,9 +232,11 @@ PROCEDURE ConnectRemote;
 VAR
   i : INTEGER;
 BEGIN
-  IF modemTest AND (NOT IsOffline) THEN BEGIN
-    WriteLn('Backup aborted: serial port is busy.');
-    Halt;
+  IF modemTest THEN BEGIN
+    IF NOT IsOffline THEN BEGIN
+      WriteLn('Backup aborted: serial port is busy.');
+      Halt;
+    END;
   END;
   FOR i := 1 TO numConnectStrs DO
     SendCommand(connectStrs[i]);
@@ -247,4 +249,4 @@ BEGIN
   FOR i := 1 TO numDisconnectStrs DO
     SendCommand(disconnectStrs[i]);
 END;
-
+
