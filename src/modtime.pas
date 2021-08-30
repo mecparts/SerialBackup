@@ -1,6 +1,6 @@
 TYPE
   ModTimeString = STRING[12];
-FUNCTION MakeModTime(yr,mn,dy,hh,mm,ss : BYTE) : ModTimeString;
+FUNCTION MakeZsModTime(yr,mn,dy,hh,mm,ss : BYTE) : ModTimeString;
 
   { leap year calculator expects year argument as years offset from 1900 }
   FUNCTION LeapYear(year : INTEGER) : BOOLEAN;
@@ -48,13 +48,45 @@ BEGIN
   seconds := seconds + bcd2bin(ss);
   seconds := seconds + 6 * 3600.0;
   octal := '';
-  WHILE seconds > 0.0 DO BEGIN
+  REPEAT;
     seconds := seconds / 8;
     digit := Trunc(Frac(seconds)*8+0.001);
     seconds := seconds - Frac(seconds);
     octal := Chr(digit+$30) + octal;
-  end;
-  MakeModTime := octal;
+  UNTIL seconds = 0.0;
+  MakeZsModTime := octal;
 END;
 
-
+FUNCTION MakeZrModTime(date : INTEGER) : ModTimeString;
+
+  FUNCTION bcd2bin(bcd : BYTE) : BYTE;
+  BEGIN
+    bcd2bin := (bcd SHR 4) * 10 + (bcd AND $0F);
+  END;
+
+CONST
+  SecondsInDay = 86400.0;
+
+VAR
+  i,year,month : INTEGER;
+  seconds : REAL;
+  octal : ModTimeString;
+  digit : BYTE;
+BEGIN
+  seconds := 252374400.0; { seconds from 1/1/1970 to 12/31/1977 }
+  seconds := seconds + SecondsInDay * (256.0 * Mem[date+1] + Mem[date]);
+
+  seconds := seconds + bcd2bin(Mem[date+2]) * 3600.0;
+  seconds := seconds + bcd2bin(Mem[date+3]) * 60.0;
+  seconds := seconds + 6 * 3600.0;
+  octal := '';
+  REPEAT
+    seconds := seconds / 8;
+    digit := Trunc(Frac(seconds)*8+0.001);
+    seconds := seconds - Frac(seconds);
+    octal := Chr(digit+$30) + octal;
+  UNTIL seconds = 0.0;
+  MakeZrModTime := octal;
+END;
+
+

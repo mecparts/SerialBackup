@@ -8,12 +8,12 @@ still readable. But having a finite supply of 5.25" floppy discs,
 and a handy Linux system standing by with essentially unlimited 
 disc space, I started to get ideas... and Serial Backup was born.
 
-Serial Backup uses a serial link to backup files using Ymodem 
-batch protocol. It sends files that haven't yet been backed up to a 
-remote system. Using Ymodem allows batch sends, and (for anyone 
-running ZSDOS) the preservation of file timestamps.  After each 
-file is successfully sent, its archive bit is set, so it won't be 
-backed up again until/unless it's modified.
+Serial Backup uses a serial link to backup files using Ymodem
+batch protocol. It sends files that haven't yet been backed up to
+a remote system. Using Ymodem allows batch sends, and (for anyone
+running ZRDOS or ZSDOS) the preservation of file timestamps.
+After each file is successfully sent, its archive bit is set, so
+it won't be backed up again until/unless it's modified.
 
 Serial Backup logs in to the remote system, starts up its Ymodem 
 program in receive mode, sends all the files modified since the 
@@ -32,9 +32,9 @@ maximum user number in the configuration file).
 ### The configuration file
 
 Serial Backup assumes its configuration file is called 
-**A:BACKUP.CFG**. Since I use ZSDOS, I set it up as a public 
-file, so it's accessible no matter what user area I happen to be 
-operating in.
+**A:BACKUP.CFG**. Since I use ZRDOS and ZSDOS, I set it up as a
+public file, so it's accessible no matter what user area I happen
+to be operating in.
 
 | Keyword     | Use | Parameter |
 | ----------- | ---------------------------------------- | -------------------------------------------- |
@@ -110,12 +110,12 @@ allows it to access the Zsystem's environment block. This allows
 the utility to retrieve both the drive map and the maximum user 
 number.
 
-### ZSDOS support
+### ZRDOS and ZSDOS support
 
-Adding ZSDOS support is even easier than adding ZCPR3 support. 
-All you have to do is: nothing. The utility automatically detects 
-when it's being run under ZSDOS and sends the file modification 
-timestamps.
+Adding support for ZRDOS or ZSDOS is even easier than adding
+ZCPR3 support. All you have to do is: nothing. The utility
+automatically detects when it's being run under ZRDOS or ZSDOS
+and sends the file modification timestamps.
 
 ### Paths
 
@@ -125,9 +125,35 @@ that's sent is "b/4/file.txt". The Ymodem program on the remote
 system must accept a full pathname and create subdirectories as 
 needed (Linux's rz does this out of the box.)
 
-### Serial port speed
+### Serial port
+
+Serial Backup assumes that your serial device is available
+through the reader and punch logical devices, and, as such,
+through the Aux device in Turbo Pascal.
+
+#### Serial port speed
 
 One thing that Serial Backup doesn't handle is setting the speed 
 of the serial port. It just uses the port at whatever speed it 
 was previously set to. With no consistent way to set the serial 
 port speed, it's left to an external program to do this.
+
+#### Serial port input status
+
+As there's no equivalant to the CONST BDOS/BIOS call for the
+reader device in standard CP/M, you'll have to roll your own.
+Somewhere in your BIOS is a routine that checks to see if there's
+a character available from the reader device. You have to track
+it down and figure out how to call it from the ModemInReady
+routine in **mdminrdy.pas**. It may be an extended BIOS call, it
+may be a port you'll have to read, it may even be a memory
+location to check for the number of characters available in an
+interrupt serviced input FIFO.
+
+*If* your BIOS implements the CP/M IObyte, and allows for
+switching the logical console device (CON:) to the reader and
+punch (TTY:), you could try altering the IObyte on the fly to
+switch CON: from CRT: to TTY:, and then using the BDOS CONST call
+to see if the reader has a character available. I haven't tried
+it, but in theory it sounds like it would work.
+

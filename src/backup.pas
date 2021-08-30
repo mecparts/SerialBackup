@@ -49,6 +49,7 @@ TYPE
 
 {$I ISZCPR3 }
 {$I ISZSDOS }
+{$I ISZRDOS }
 {$I UPDCRC  }
 {$I USERCHAR}
 {$I TOHEX   }
@@ -117,4 +118,4 @@ BEGIN
   EndYModem(crcMode);
   DisconnectRemote;
 END.
-
+

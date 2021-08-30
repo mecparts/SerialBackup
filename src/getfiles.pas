@@ -8,7 +8,8 @@ CONST
   GetDPB = 31;
   GetSetUser = 32;
   GetFileSize = 35;
-  GetFileStamp = 102;
+  GetZrdosStamp = 54;
+  GetZsdosStamp = 102;
   ExmOffset = 4;        { offset of extent mask in disk parameter block }
 VAR
   numFiles : INTEGER;
@@ -18,7 +19,7 @@ VAR
   i,j,offset : INTEGER;
   fcb : FcbType;
   diskParamBlock,extentsPerDirEntry : INTEGER;
-  haveTimestamps : BOOLEAN;
+  haveZsdosTimestamps,haveZrdosTimestamps : BOOLEAN;
 BEGIN
   numFiles := 0;
   oldDrive := Bdos(GetDriveNum);
@@ -26,7 +27,8 @@ BEGIN
   diskParamBlock := BdosHL(GetDPB);
   extentsPerDirEntry := Mem[diskParamBlock + ExmOffset] + 1;
   Bdos(SetDriveNum,oldDrive);
-  haveTimestamps := IsZSDOS;
+  haveZsdosTimestamps := IsZSDOS;
+  haveZrdosTimestamps := IsZRDOS;
   WITH fcb DO BEGIN
     User := ORD(drv) - ORD('A') + 1;
     FOR i := 0 TO 7 DO
@@ -55,6 +57,10 @@ BEGIN
           User := returnFcb.User;
           Move(returnFcb.Name,Name,8);
           Move(returnFcb.Typ,Typ,3);
+          IF haveZrdosTimestamps THEN
+            ModTime := MakeZrModTime(4+BdosHL(GetZrdosStamp,Addr(fcb)))
+          ELSE
+            ModTime := '0';
         END;
         result := BDOS(FindNext,Addr(fcb));
       END ELSE BEGIN
@@ -78,14 +84,13 @@ BEGIN
         RecNum[j] := 0;
       BDOS(GetFileSize,Addr(fcb));
       files[i].Bytes := 32768.0*RecNum[2]+128.0*RecNum[1]+RecNum[0];
-      IF haveTimestamps THEN BEGIN
-        BDOS(GetFileStamp,Addr(fcb));
-        files[i].ModTime := MakeModTime(dmabuf[10],dmabuf[11],dmabuf[12],dmabuf[13],dmabuf[14],0);
-      END ELSE
-        files[i].ModTime := '0';
+      IF haveZsdosTimestamps THEN BEGIN
+        BDOS(GetZsdosStamp,Addr(fcb));
+        files[i].ModTime := MakeZsModTime(dmabuf[10],dmabuf[11],dmabuf[12],dmabuf[13],dmabuf[14],0);
+      END;
     END;
   END;
   BDOS(GetSetUser,oldUser);
   GetFiles := numFiles;
 END;
-
+
